@@ -1,0 +1,337 @@
+Usage: teqc [opts] file1 [file2 [...]]
+   or: teqc [opts] < stdin
+where [opts]:
+	-ver[sion] or +ver[sion]dump program version and build to stderr
+	-id or +id           dump program id to stderr
+	-help or +help       dump the entire on-line help to stderr
+	+relax               allow relaxed requirements on RINEX header fields
+	-relax               strict requirements on RINEX header fields (default)
+	+reformat            allow reading of misformatted RINEX data fields
+	-reformat            strict requirements on RINEX data fields (default)
+	+err name            write stderr directly to file "name"
+	++err name           append stderr directly to file "name"
+	+out name            write stdout directly to file "name"
+	++out name           append stdout directly to file "name"
+	-config name         read file(s) "name" as configuration file(s)
+	+config              dump all set parameters as a configuration to stdout
+	++config             dump all known parameters as a superset configuration to stdout
+	+bcf                 dump all known parameters as a BINEX configuration to stdout
+	++igs                dump all IGS receiver/antenna/dome designations to stdout
+	++sym                dump all ASCII QC plot symbols to stdout
+	-max_rx_ch[annels] # set maximum # of receiver channels based on receiver type
+                               (default = 12 unless found by matching with IGS designation)
+	-max_rx_SVs #        set maximum # of SVs trackable (per OBS epoch) based on receiver type
+                               (default = 12 unless found by matching with IGS designation)
+	-n_GPS #             set maximum expected GPS SV PRN to 0 < # < 256 (default = 32)
+	-n_GLONASS #         set maximum expected GLONASS SV # to 0 < # < 256 (default = 24)
+	-n_SBAS #            set maximum expected SBAS SV # to 0 < # < 256 (default = 19)
+	-n_Galileo #         set maximum expected Galileo SV # to 0 < # < 256 (default = 32)
+	+igs                 check rx and ant designations with IGS list (default)
+	-igs                 don't check rx and ant designations with IGS list
+	+ch                  use all channels (default)
+	-ch#                 don't use channel #
+	+NaN_obs             use all OBS data (default)
+	-NaN_obs #           don't use SV w/ NaN data in obs list #
+	+G                   use all GPS SVs (default)
+	-G#                  don't use GPS SV PRN #
+	+R                   use all GLONASS SVs (default)
+	-R#                  don't use GLONASS SV slot #
+	+S                   use all SBAS SVs (default)
+	-S#                  don't use SBAS SV PRN #
+	+E                   use all Galileo SVs (default)
+	-E#                  don't use Galileo SV PRN #
+	+svo                 order SVs by PRN or slot #
+	-svo                 SV detection ordering (default)
+	-st[art_window] str  set start time to str == [[[[[[YY]YY]MM]DD]hh]mm]ss[.sssss]
+	+dX #                delta X time of # from start time; X == Y, M, d, h, m, s for year,...,second
+	-dX #                delta X time of # from end time; X == Y, M, d, h, m, s for year,...,second
+	-e[nd_window] str    set end time to str == [[[[[[YY]YY]MM]DD]hh]mm]ss[.sssss]
+	-hole name           read file "name" to establish list of window holes
+	-tbin # str          time binned output with # delta and filename prefix "str"
+	-ast str             set aligned time binned start time to str == [[[[[[YY]YY]MM]DD]hh]mm]ss[.sssss]
+	                      ... or str = - or _ to start alignment with the first observation epoch
+	+win_mo[nument] #    window filter on monument/marker name string #, maximal match
+	-win_mo[nument] #    window filter on monument/marker name string #, minimal match
+	+win_mn #            window filter on monument/marker number string #, maximal match
+	-win_mn #            window filter on monument/marker number string #, minimal match
+		+xdr               attempt to use NMEA XDR strings as met data (default)
+		-.xdr               do not attempt to use NMEA XDR strings as met data
+	-delim#              change delimiter to # for seperating file names (default = ,)
+	+obs[file(s)] name   output any OBS records in native format to file "name"
+	+nav[file(s)] name   output any NAV records in native format to file "name"
+	+met[file(s)] name   output any MET records in native format to file "name"
+	+event[s_out]        output event info with observations
+	-event[s_out]        don't output event info with observations (default)
+	+dump_i[on]          dump all ionosphere model parameters to stderr
+	-dump_i[on]          don't dump ionosphere model parameters to stderr (default)
+	+dump_u[tc]          dump all UTC model parameters to stderr
+	-dump_u[tc]          don't dump UTC model parameters to stderr (default)
+	+diag                dump parsing and other diagnostics to stderr
+	-diag                don't dump parsing and other diagnostics to stderr (default)
+	+doy                 format certain dates such as metadata in year day-of-year
+	-doy                 dates formatted in year month day (default)
+	+smtt                smooth time tag (ms jumps in phase and range) (default)
+	-smtt                ms jumps in time tag (smooth phase and range)
+	-aoa code            input is from AOA (JPL) receiver, record type "code":
+	                       code = cb for ConanBinary survey data from TurboRogue or TurboStar rxs
+	                       code = tb for TurboBinary survey data from TurboRogue or TurboStar rxs
+	                       code = tbY for TurboBinary survey data from Benchmark ACT rx ("Y-codeless")
+	-ash[tech] code      input is from Ashtech receiver, record type "code":
+	                       code = d for B-file survey data
+	                       code = s for streamed (MBEN/DBEN) data
+	                       code = r for R-file format data
+	                       code = u for U-file format data
+	-cmc code            input is from Canadian Marconi (CMC) receiver, record type "code":
+	                       code = b for CMC binary
+	-jav[ad] code        input is from Javad receiver, record type "code":
+	                       code = jps for Javad JPS
+	-lei[ca] code        input is from Leica receiver, record type "code":
+	                       code = ds for Leica DS format
+	                       code = lb2 for Leica LB2 format
+	                       code = mdb for Leica MDB format
+	-mot[orola] code     input is from Motorola receiver, record type "code":
+	                       code = oncore for Oncore binary
+	-nct code            input is from NavCom Technologies receiver, record type "code":
+	                       code = b for NavCom binary
+	-roc[kwell] code     input is from Rockwell receiver, record type "code":
+	                       code = z for Zodiac format
+	-sep[tentrio] code   input is from Septentrio receiver, record type "code":
+	                       code = sbf for Septentrio Binary Format
+	-top[con] code       input is from Topcon receiver, record type "code":
+	                       code = tps for Topcon TPS
+	-tr[imble] code      input is from Trimble receiver, record type "code":
+	                       code = d for .dat survey data
+	                       code = s for streamed RT17 data
+	-ti code             input is from Texas Instruments receiver, record type "code":
+	                       code = gesar for TI-4100 GESAR & BEPP/CORE format survey data
+	                       code = rom for TI-4100 TI-ROM format survey data
+	-ubl[ox] code        input is from u-blox AG receiver, record type "code":
+	                       code = ubx for u-blox UBX binary
+	-binex               input is BINEX format
+	+binex <record_types>               output to be BINEX
+	                       <record_types> = - for default types
+	-rtigs               input is IGS RTWG (RTIGS) format
+	-soc                 input is JPL Soc format
+	-argo                input is ARGO format
+	-P[codes]            P-codeless (L2-squaring) or C/A-L1-only receiver
+	+P[codes]            normal dual-frequency receiver (including L2C-capable) (default)
+	+C2                  LC2 code pseudorange to be included in observables
+	-C2                  LC2 code pseudorange not to be included in observables (default)
+	+L2                  expect and use L2-carrier data (default)
+	-L2                  don't expect L2-carrier data
+	+L1_2                keep L1 cycle data if L1 is squared (default)
+	-L1_2                delete L1 cycle data if L1 is squared
+	+L2_2                keep L2 cycle data if L2 is squared (default)
+	-L2_2                delete L2 cycle data if L2 is squared
+	+CA_L1               use phase value in C/A code block as L1
+	-CA_L1               use phase value in P1 code block as L1 (default)
+	+L2C_L2              use phase value in L2C code block as L2
+	-L2C_L2              use phase value in P2 code block as L2 (default)
+	+msec_phs_adj        include ms adjustment to phase values at rx ms resets
+	-msec_phs_adj        don't include ms adjustment to phase values at rx ms resets (default)
+	+leap[_seconds]      subtract current leap seconds from GLONASS pseudoranges (default)
+	-leap[_seconds]      no leap second adjustments to GLONASS pseudoranges
+	+rds                 reverse Doppler sign
+	-rds                 keep current Doppler sign (default)
+	+smooth[ing]         include smoothing correction to pseudoranges
+	-smooth[ing]         don't include smoothing correction to pseudoranges (default)
+	+rx_clk_off[set]     include receiver clock offset to RINEX OBS and certain BINEX
+	-rx_clk_off[set]     don't include receiver clock offset (default)
+	-r[everse]           normal processor endianness on binary data output (default)
+	+r[everse]           reverse processor endianness on binary data output (BINEX only for now)
+	+Ashtech_qd          include all "questionable" data when translating
+	-Ashtech_qd          exclude all "questionable" data (default)
+	+Ashtech_B_file_adjust  Ashtech B-file is corrupted
+	-Ashtech_B_file_adjust  normal Ashtech B-file (default)
+	+Ashtech_old_clk_reset  use old Ashtech clock reset scheme
+	-Ashtech_old_clk_reset  use modern Ashtech clock reset scheme (default)
+	+lb2_fe              ignore Leica LB2 records until 0xfe record is read
+	-lb2_fe              use all Leica LB2 records (default)
+	+skip_init_LB2_03    skip initial Leica LB2 0x03 record
+	-skip_init_LB2_03    use initial Leica LB2 0x03 record (default)
+	-sbfobs #            specify Septentrio Binary Format observation record to use; # = 5889|5890|5944
+	+geod_p              data from Trimble Geodesist-P receiver
+	-geod_p              not from Geodesist-P (default)
+	+TBnr                use 0x68 TurboBinary data (normal-rate observable record) (default)
+	-TBnr                don't use 0x68 TurboBinary data
+	+TBLC                use LC (0xde) TurboBinary data
+	-TBLC                don't use LC (0xde) TurboBinar data (default)
+	+TB1s                use 1-sec (0x1a) TurboBinary data)
+	-TB1s                don't use 1-sec (0x1a) TurboBinary data (default)
+	+TBhr                use high-rate (0xdb, 0xdc) TurboBinary data
+	-TBhr                don't use high-rate (0xdb, 0xdc) TurboBinary data (default)
+	+TBfe_ff             recognize header/trailer records (0xff, 0xfe) TurboBinary records (default)
+	-TBfe_ff             ignore 0xff, 0xfe records
+	+TB_ca_fix           apply CA offset fix to 0x68 TurboBinary records (before ~1 Dec 92)
+	-TB_ca_fix           use modern (post-1 Dec 92( CA translation of 0x68 TurboBinary records (default)
+	+v[erify]            verify conformance to RINEX standard
+	-v[erify]            stream out RINEX standard or other (such as qc output) (default)
+	-week #              set GPS week to initial value # for native format translation (default = best guess)
+	+warn[ings]          dump any warnings to stderr (default)
+	-warn[ings]          don't dump any warnings to stderr
+	+notice[s]           dump any notices to stderr (default)
+	-notice[s]           don't dump any notices to stderr
+	+quiet               quiet stdout/stderr qc mode; automatically sets -warn[ings] and -notice[s]
+	-quiet               normal stdout/stderr qc output (default)
+	+meta[data]          produce UNAVCO archive raw metadata table
+	-meta[data]          don't produce UNAVCO archive raw metadata table (default)
+	+mds                 show short metadata summary
+	-mds                 don't show short metadata summary (default)
+	+mdf                 show probable format
+	-mdf                 don't show probable format (default)
+	+phc                 output all RINEX post-header comments (default)
+	-phc                 suppress RINEX post-header comments
+	-base[year] #        change epoch base year to # A.D. (default = 1980)
+	
+	-O.{opt} arg(s)      override any existing OBS header {opt} with arg(s):
+		-O.sum[mary] s           for OBS file(s) and stdin not used as input, put summary at beginning of output (two passes)
+		-O.sum[mary] e           for OBS file(s), put summary at end of output (requires only one pass)
+		-O.an "str"              set OBS antenna number to "str"
+		-O.at "str"              set OBS antenna type to "str"
+		-O.px[WGS84xyz,m] x y z  set OBS antenna WGS 84 position to x y z (in meters)
+		-O.pg[eo,ddm] lat lon el set OBS antenna WGS 84 position to lat lon elevation (degrees degrees meters)
+		-O.pe[hEN,m] h E N       set OBS antenna position eccentricities to h E N (in meters)
+		-O.mov[ing] 1            force OBS antenna position to be in kinematic (roving) state initially
+		-O.ag[ency] "str"        set OBS operating agency to "str"
+		+O.c[omment] "str"       append OBS comment "str"
+		-O.dec[imate] #          modulo decimation of OBS epochs to # time units
+	                                   # = 30s results in epochs nominally at 00 and 30 seconds
+		-O.def_wf i j            set OBS default wavelength factors to i and j
+		-O.mod_wf i j n {SV1 SV2 ... SVn}  set OBS modified wavelength factors to i and j of n SVs
+		-O.e[nd] Y M D h m s     set OBS end time (last epoch) to Y M D h m s
+		-O.int[erval,sec] #      set OBS observation interval to # ( > 0.) seconds
+		-O.leap #                set OBS leap seconds to #
+		-O.mn "str"              set OBS monument number to "str"
+		-O.mo[nument] "str"      set OBS monument name to "str"
+		-O.o[perator] "str"      set OBS operator name to "str"
+		-O.rename_obs "str"      rename OBS observables to "str"
+	                                   "str" = L1L2C1P2 renames 4 observables to be L1 L2 C1 P2, and in that order
+		-O.obs[_types] "str"     change OBS observables to "str"
+	                                   "str" = L1L2C1P2 sets 4 observables to be L1 L2 C1 P2, and in that order
+		-O.rn "str"              set OBS receiver number to "str"
+		-O.rt "str"              set OBS receiver type to "str"
+		-O.rv "str"              set OBS receiver firmware version to "str"
+		-O.r[un_by] "str"        set OBS run by to "str"
+		-O.s[ystem] #            set OBS satellite system to # (= G, R, S, T, or M)
+		-O.sl[ant] s d dh        set OBS antenna position eccentricities to dh+sqrt(s^2 - (d/2)^2) 0 0 (in meters)
+		-O.st[art] Y M D h m s   set OBS start time (first epoch) to Y M D h m s
+	-N.{opt} arg(s)      override any existing NAV header {opt} with arg(s):
+		-N.a[lpha] a0 a1 a2 a3   set NAV ionosphere alpha parameters to a0 a1 a2 a3
+		-N.b[eta] b0 b1 b2 b3    set NAV ionosphere beta parameters to b0 b1 b2 b3
+		+N.c[omment] "str"       append NAV comment "str"
+		-N.corr[_GLO] yr mon day secset GLONASS NAV correction to system time to yr mon day sec
+		-N.corr_SBAS yr mon day sec set SBAS NAV correction to system time to yr mon day sec
+		-N.dec[imate] #          modulo decimation of NAV ToE epochs to # time units
+	                                   # = 12h results in ToE epochs at 00 and 12 hours
+		-N.leap #                set NAV leap seconds to #
+		-N.r[un_by] "str"        set NAV run by to "str"
+		-N.s[ystem] #            set NAV satellite system to # (= G, R, S)
+		-N.UTC A0 A1 t w         set NAV UTC time model to A0 A1 t w
+	-M.{opt} arg(s)      override any existing MET header {opt} with arg(s):
+		+M.c[omment] "str"       append MET comment "str"
+		-M.dec[imate] #          modulo decimation of MET epochs to # time units
+	                                   # = 15m results in epochs at 00, 15, 30, and 45 minutes
+		-M.int[erval,sec] #      set MET observation interval to # ( > 0.) seconds
+		-M.l[ast_epoch] <GPSweek>:<dow>:<sec>    set MET last epoch to <GPSweek>:<dow>:<sec>
+		-M.mn "str"              set MET monument number to "str"
+		-M.mo[nument] "str"      set MET monument name to "str"
+		+M.mod[el/type/acc] "obs" "model" "type" accuracy  set "obs" MET sensor mod/type/acc to "model" "type" accuracy
+	                                   "obs" = HR, PR, TD, or ZW
+		-M.rename_obs "str"      rename MET observables to "str"
+	                                   "str" = TD+HR+PR renames 3 observables to be TD HR PR, and in that order
+		-M.obs[_types] "str"     change MET observables to "str"
+	                                   "str" = TD+HR+PR sets 3 observables to be TD HR PR, and in that order
+		+M.pos[ition] "obs" x y z h  set "obs" MET sensor XYZ/H to x y z h
+	                                   "obs" = HR, PR, TD, or ZW
+		-M.r[un_by] "str"        set MET run by to "str"
+	-qc                  don't do quality check (default)
+	+qc                  quality checking (w/ following options):
+		+ap                      turn average position on
+		-ap                      don't do average position (default)
+		+eep                     turn every epoch position (silent) on
+		-eep                     don't do silent every epoch position (default)
+		+eepx                    turn every epoch position (xyz cartesian)on
+		-eepx                    don't do xyz every epoch position (default)
+		+eepg                    turn every epoch position (geographical) on
+		-eepg                    don't do geographical every epoch position (default)
+		+cct                     report coarse code pseudorange observable totals (default)
+		-cct                     report coarse code pseudorange subtotals (no precise code pseudorange)
+		+cl[ock_slips]           turn clock n-msec slip detection on (default)
+		-cl[ock_slips]           don't do clock n-msec slip detection
+		-code_sigmas #           set maximum tolerace for code rejection to # (default = 2.0)
+		+data[indicators]        turn data indicators on qc ASCII plot on (default)
+		-data[indicators]        don't use data indicators on qc ASCII plot
+		-eps[ilon] #             set machine epsilon to # (default = 1.387779e-17)
+		+hor[izon]               when possible, show SV information down to horizon (default)
+		-hor[izon]               show only observed SV information
+		+ion                     compute L2-ionospheric observable (default)
+		-ion                     don't compute L2-ionospheric observables
+		+iod                     compute L2-ionospheric derivative (default)
+		-iod                     don't compute L2-ionospheric derivative
+		+tec                     compute TEC observable
+		-tec                     don't compute TEC observables (default)
+		-bins #                  use # elevation bins between horizon and zenith for all ion, mp, and sn observables (default = 18)
+		-ion_bins #              use # elevation bins between horizon and zenith for ionospheric observable (default = 18)
+		-ion_jump[cm] #          set maximum L2-ionospheric change to be # cm (default = 1.000e+35)
+		-iod_jump[cm/min] #      set maximum L2-ionospheric time-rate of change to be # cm/minute (default = 400.0)
+		-gap_mn[min] #           set minimum gap allowed # minutes (default = 10.0)
+		-gap_mx[min] #           set maximum gap allowed w/o NAV info to # minutes (default = 90.0)
+		-glonass_n str           str = GLONASS SV and frequency number file
+		+l[ong_report]           write a long report file segment (default)
+		-l[ong_report]           don't write a long report file segment
+		+lli                     turn Loss-of-Lock indicator on (default)
+		-lli                     don't show Loss-of-Lock indicator
+		+ma                      turn multipath moving average on (default)
+		-ma                      don't use multipath moving average
+		+mask                    when possible, show SV information down to elevation mask
+		-mask                    show normal SV information (default)
+		-min_L1 #                set minimum allowable L1 S/N RINEX code to 0 <= # <= 9 (default = 0)
+		-min_L2 #                set minimum allowable L2 S/N RINEX code to 0 <= # <= 9 (default = 0)
+		-min_SVs #               set minimum allowable SVs w/ 2 codes (per OBS epoch) to # for position attempt (default = 5)
+		+mp                      compute L1 and L2 multipath observables (default)
+		-mp                      don't compute L1 and L2 multipath observables
+		-mp1_rms[cm] #           set expected MP1 rms to # cm (default = 50.00)
+		-mp2_rms[cm] #           set expected MP2 rms to # cm (default = 65.00)
+		-mp_bins #               use # elevation bins between horizon and zenith for mulitpath (default = 18)
+		+mp_raw                  show raw multipath (no slip removal)
+		-mp_raw                  show multipath (if being done) w/ slip removal (default)
+		-mp_sigmas #             set minimum sigma threshold for mp slips to # sigmas (default = 4.0)
+		-mp_win #                set multipath moving average window to # (< 65536) points (default = 50)
+		-mp_CA_AS[%rms] #        set % increase of multipath rms to # if CA or AS present (default = 100.0)
+		-msec_tol[msec] #        set millisecond clock slip tolerance to # msec (default = 1.00e-02)
+		-nav[file(s)] name       input NAV file(s) "name" for ephemeris data (to perform position calculations)
+		-p[ortrait][#[u]]        qc ASCII plot plot in "portrait" mode; bin length in # units u (default u == m[inutes])
+		-path_dt[min] #          set sampling of SV cubic spline fit to # minutes (default = 10)
+		+pl                      compute L1 and L2 pseudorange-phase observables
+		-pl                      don't compute L1 and L2 pseudorange-phase observables (default)
+		+plot                    write plot file(s) (default)
+		-plot                    don't write plot file(s)
+		+pos[ition]              find antenna position and terminate teqc ASAP
+		-pos[ition]              run teqc normally (default)
+		-pos_conv[m] #           set position convergence to # ( > 0) meters (default = 1.000000e+00 m)
+		-pos_jump[m] #           set position jump detection to # ( > 0) meters (default = 1.000000e+05 m)
+		+rep[ort]                write a report file (default)
+		-rep[ort]                don't write any report file
+		+reset                   find antenna position and re-qc RINEX OBS file (default)
+		-reset                   only one pass of each RINEX OBS file allowed (default if using stdin)
+		-root str                supply filename root for ancillary files as str
+		+rs                      compute rise and set times of each SV w/ NAV info (default)
+		-rs                      don't compute rise and set times
+		+s[hort_report]          write a short report file segment (default)
+		-s[hort_report]          don't write a short report file segment
+		-set_hor[izon,deg] #     set elevation horizon to # degrees (default = 0.00)
+		-set_mask[deg] #         set elevation mask to # degrees (default = 10.00)
+		-set_comp[arison,deg] #  set elevation comparison to # degrees (default = 25.00)
+		-slips name              slip details written to file name
+		+sn[ratio]               compute S/N observables (default)
+		-sn[ratio]               don't compute S/N observables
+		-sn_bins #               use # elevation bins between horizon and zenith for S/N (default = 18)
+		+ssv                     give individual SUM lines for each SV
+		-ssv                     no individual SUM lines for each SV (default)
+		+sym[bol_codes]          dump symbol codes and hierarchy for short report ASCII time plot
+		-sym[bol_codes]          don't dump symbol codes and hierarchy (default)
+		-w[idth] #               set time width of qc ASCII plot to 0 < # < 256 (default = 72)
+		+Y[-code]                Y-code receiver expected
+		-Y[-code]                P-code receiver expected (possible tracking of P-codes w/ A/S on) (default)
+		-qcq                     don't do quality check, quick or otherwise (default)
+		+qcq                     do quality check w/ no plots or report unless explicitly specified
